@@ -1,0 +1,195 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: jjk3@nimbusscale.com
+  HomeIp:
+    Description: The IP address range that can be used to Access to the EC2 instances
+    Type: String
+    Default: 108.202.180.14/32
+
+Resources:
+## Network
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm
+  Subnet0:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm0
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm1
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 2
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm2
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm
+  Route:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  SubnetRouteTableAssociation0:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet0
+      RouteTableId: !Ref RouteTable
+  SubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref RouteTable
+  SubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      RouteTableId: !Ref RouteTable
+  AccessFromHomeSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+      - IpProtocol: -1
+        CidrIp: !Ref HomeIp
+
+## Hosts
+  Master0:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0ebdd976
+      InstanceType: t2.medium
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref AccessFromHomeSecurityGroup
+        - !GetAtt VPC.DefaultSecurityGroup
+      SubnetId: !Ref Subnet0
+      Tags:
+      - Key: Name
+        Value: k8s-kubeadm-master0
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          curl https://s3-us-west-2.amazonaws.com/bct-jjk3/kubeadm_aws_ha/master-init.sh | bash
+
+#  Master1:
+#    Type: AWS::EC2::Instance
+#    Properties:
+#      ImageId: ami-0ebdd976
+#      InstanceType: t2.medium
+#      KeyName: !Ref KeyName
+#      SecurityGroupIds:
+#        - !Ref SshSecurityGroup
+#        - !GetAtt VPC.DefaultSecurityGroup
+#      SubnetId: !Ref Subnet1
+#      Tags:
+#      - Key: Name
+#        Value: k8s-kubeadm-master1
+#
+#  Master2:
+#    Type: AWS::EC2::Instance
+#    Properties:
+#      ImageId: ami-0ebdd976
+#      InstanceType: t2.medium
+#      KeyName: !Ref KeyName
+#      SecurityGroupIds:
+#        - !Ref SshSecurityGroup
+#        - !GetAtt VPC.DefaultSecurityGroup
+#      SubnetId: !Ref Subnet2
+#      Tags:
+#      - Key: Name
+#        Value: k8s-kubeadm-master2
+#
+#  Worker0:
+#    Type: AWS::EC2::Instance
+#    Properties:
+#      ImageId: ami-0ebdd976
+#      InstanceType: t2.medium
+#      KeyName: !Ref KeyName
+#      SecurityGroupIds:
+#        - !Ref SshSecurityGroup
+#        - !GetAtt VPC.DefaultSecurityGroup
+#      SubnetId: !Ref Subnet0
+#      Tags:
+#      - Key: Name
+#        Value: k8s-kubeadm-Worker0
+#
+#  Worker1:
+#    Type: AWS::EC2::Instance
+#    Properties:
+#      ImageId: ami-0ebdd976
+#      InstanceType: t2.medium
+#      KeyName: !Ref KeyName
+#      SecurityGroupIds:
+#        - !Ref SshSecurityGroup
+#        - !GetAtt VPC.DefaultSecurityGroup
+#      SubnetId: !Ref Subnet1
+#      Tags:
+#      - Key: Name
+#        Value: k8s-kubeadm-Worker1
+#
+#  Worker2:
+#    Type: AWS::EC2::Instance
+#    Properties:
+#      ImageId: ami-0ebdd976
+#      InstanceType: t2.medium
+#      KeyName: !Ref KeyName
+#      SecurityGroupIds:
+#        - !Ref SshSecurityGroup
+#        - !GetAtt VPC.DefaultSecurityGroup
+#      SubnetId: !Ref Subnet2
+#      Tags:
+#      - Key: Name
+#        Value: k8s-kubeadm-Worker2
