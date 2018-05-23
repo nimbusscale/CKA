@@ -1,0 +1,150 @@
+apiVersion: kops/v1alpha2
+kind: Cluster
+metadata:
+  creationTimestamp: 2018-05-23T16:36:53Z
+  name: pubdns.k8s.nimbusscale.com
+spec:
+  api:
+    dns: {}
+  authorization:
+    rbac: {}
+  channel: stable
+  cloudProvider: aws
+  configBase: s3://bct-jjk3-kops/pubdns.k8s.nimbusscale.com
+  etcdClusters:
+  - etcdMembers:
+    - instanceGroup: master-us-west-2a
+      name: a
+    - instanceGroup: master-us-west-2b
+      name: b
+    - instanceGroup: master-us-west-2c
+      name: c
+    name: main
+  - etcdMembers:
+    - instanceGroup: master-us-west-2a
+      name: a
+    - instanceGroup: master-us-west-2b
+      name: b
+    - instanceGroup: master-us-west-2c
+      name: c
+    name: events
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+  kubernetesApiAccess:
+  - 0.0.0.0/0
+  kubernetesVersion: 1.9.3
+  masterPublicName: api.pubdns.k8s.nimbusscale.com
+  networkCIDR: 172.20.0.0/16
+  networking:
+    canal: {}
+  nonMasqueradeCIDR: 100.64.0.0/10
+  sshAccess:
+  - 0.0.0.0/0
+  sshKeyName: jjk3@nimbusscale.com
+  subnets:
+  - cidr: 172.20.32.0/19
+    name: us-west-2a
+    type: Public
+    zone: us-west-2a
+  - cidr: 172.20.64.0/19
+    name: us-west-2b
+    type: Public
+    zone: us-west-2b
+  - cidr: 172.20.96.0/19
+    name: us-west-2c
+    type: Public
+    zone: us-west-2c
+  topology:
+    dns:
+      type: Public
+    masters: public
+    nodes: public
+
+---
+
+apiVersion: kops/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    kops.k8s.io/cluster: pubdns.k8s.nimbusscale.com
+  name: master-us-west-2a
+spec:
+  image: kope.io/k8s-1.8-debian-jessie-amd64-hvm-ebs-2018-02-08
+  machineType: t2.medium
+  maxSize: 1
+  minSize: 1
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-west-2a
+  role: Master
+  subnets:
+  - us-west-2a
+
+---
+
+apiVersion: kops/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    kops.k8s.io/cluster: pubdns.k8s.nimbusscale.com
+  name: master-us-west-2b
+spec:
+  image: kope.io/k8s-1.8-debian-jessie-amd64-hvm-ebs-2018-02-08
+  machineType: t2.medium
+  maxSize: 1
+  minSize: 1
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-west-2b
+  role: Master
+  subnets:
+  - us-west-2b
+
+---
+
+apiVersion: kops/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    kops.k8s.io/cluster: pubdns.k8s.nimbusscale.com
+  name: master-us-west-2c
+spec:
+  image: kope.io/k8s-1.8-debian-jessie-amd64-hvm-ebs-2018-02-08
+  machineType: t2.medium
+  maxSize: 1
+  minSize: 1
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-west-2c
+  role: Master
+  subnets:
+  - us-west-2c
+
+---
+
+apiVersion: kops/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    kops.k8s.io/cluster: pubdns.k8s.nimbusscale.com
+  name: nodes
+spec:
+  image: kope.io/k8s-1.8-debian-jessie-amd64-hvm-ebs-2018-02-08
+  machineType: t2.small
+  maxSize: 2
+  minSize: 2
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-west-2c
+  role: Node
+  subnets:
+  - us-west-2a
+  - us-west-2b
+  - us-west-2c
+
+---
+
+apiVersion: kops/v1alpha2
+kind: SSHCredential
+metadata:
+  labels:
+    kops.k8s.io/cluster: pubdns.k8s.nimbusscale.com
+spec:
+  publicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAxwjqlySyHYHtHXQ6GmlXx4H2U1NKjWVsr7EGAUClmyfZCP9m84dYoT7xz1JW6S5wS+1y3ErjGIsovDghHYzJbY5x7xgN0w5ShBuM5+lRU9vGmLwToFrJXe3HAICfRlpXpe3+jZ1EcNKUucSr3pn2+8zNcL6bL5QzNhx5iszTv8ISM+EyOYWL8hJagBsEz8CPCZIhIPsxPD8HuQNavTCpLhvFlV2X+jcKEjh4pLUvRvXBT18tBB+mbCm1/lZdzHlqxQ8eXL6OoKsYVL/du/LkNI0arvXmIbF+lbzjOyNLu/Qw0scJrnvlGUN7ygnEA8dcgVQJeuKkW2TrIpe61Dcwuw== jjk3@nimbusscale.com"
