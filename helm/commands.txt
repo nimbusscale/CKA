@@ -1,0 +1,94 @@
+openssl req -new -newkey rsa:2048 -nodes -days 365 -keyout tiller.key.pem -out tiller.csr
+
+openssl req –new –newkey rsa:2048 –days 365 –keyout helm.key.pem –out helm.csr
+
+
+
+
+
+openssl req -new -newkey rsa:2048 -nodes -days 365 -keyout tiller.key.pem -out tiller.csr
+Generating a 2048 bit RSA private key
+.....................+++
+........................................+++
+writing new private key to 'tiller.key.pem'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:US
+State or Province Name (full name) [Some-State]:California
+Locality Name (eg, city) []:Santa Clara
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:BlueChipTek
+Organizational Unit Name (eg, section) []:Cloud Services
+Common Name (e.g. server FQDN or YOUR name) []:tiller
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+# Sign the cert
+aws acm-pca issue-certificate \
+  --certificate-authority-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/851b5329-7395-4367-9cbd-5fc965664502 \
+  --csr file://tiller.csr \
+  --signing-algorithm "SHA256WITHRSA" \
+  --validity Value=365,Type="DAYS" \
+  --idempotency-token 1234
+{
+    "CertificateArn": "arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/cc244a67-f3e9-4ee0-a583-b264f35484f1/certificate/5d9c0520400857d45c57fe19f74756f0"
+}
+
+
+
+# get issues certificate
+aws acm-pca get-certificate \
+--certificate-authority-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/851b5329-7395-4367-9cbd-5fc965664502 \
+--certificate-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/851b5329-7395-4367-9cbd-5fc965664502/certificate/c3738cfb1725c5cc06f2801f3e28776a \
+--output text --query 'Certificate' > tiller.cert.pem
+
+# Get CA cert
+aws acm-pca get-certificate-authority-certificate \
+--certificate-authority-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/851b5329-7395-4367-9cbd-5fc965664502 \
+--output text > ca.cert.pem
+
+
+
+
+
+helm init --dry-run --debug --tiller-tls --tiller-tls-cert ./tiller.cert.pem --tiller-tls-key ./tiller.key.pem --tiller-tls-verify --tls-ca-cert ca.cert.pem
+
+kubectl create serviceaccount tiller --namespace kube-system
+
+kc apply -f rbac.yaml
+
+helm init --tiller-tls --tiller-tls-cert ./tiller.cert.pem --tiller-tls-key ./tiller.key.pem --tiller-tls-verify --tls-ca-cert ca.cert.pem --service-account tiller
+
+
+
+----- HELM
+
+openssl req -new -newkey rsa:2048 -nodes -days 365 -keyout helm.key.pem -out helm.csr
+
+
+aws acm-pca issue-certificate \
+  --certificate-authority-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/cc244a67-f3e9-4ee0-a583-b264f35484f1 \
+  --csr file://helm.csr \
+  --signing-algorithm "SHA256WITHRSA" \
+  --validity Value=365,Type="DAYS" \
+  --idempotency-token 1234
+
+aws acm-pca get-certificate \
+--certificate-authority-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/cc244a67-f3e9-4ee0-a583-b264f35484f1 \
+--certificate-arn arn:aws:acm-pca:us-west-2:899826514230:certificate-authority/cc244a67-f3e9-4ee0-a583-b264f35484f1/certificate/a5a65e040d47070567699dd638847e0e \
+--output text --query 'Certificate' > helm.cert.pem
+
+helm ls --tls --tls-ca-cert ca.cert.pem --tls-cert helm.cert.pem --tls-key helm.key.pem
+
+
+---
+

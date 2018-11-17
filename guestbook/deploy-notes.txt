@@ -1,0 +1,5 @@
+
+
+helm install stable/redis --name guestbook-redis --values values-production.yaml
+
+helm install s3-repo/redis --name guestbook-redis --values values-production.yaml

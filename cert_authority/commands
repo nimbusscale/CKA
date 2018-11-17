@@ -1,0 +1,156 @@
+ls /usr/lib/ssl/openssl.cnf
+rm demoCA/newcerts/* demoCA/index.* demoCA/serial*
+
+dir="./demoCA"
+mkdir ${dir}
+mkdir $dir/certs
+mkdir $dir/newcerts
+mkdir $dir/private
+touch $dir/index.txt
+touch $dir/index.txt.attr
+echo '1000' > $dir/serial
+
+
+openssl genrsa -aes256 -out $dir/private/cakey.pem 4096
+Generating RSA private key, 4096 bit long modulus
+.....................................++
+........................++
+e is 65537 (0x10001)
+Enter pass phrase for ./demoCA/private/cakey.pem:
+Verifying - Enter pass phrase for ./demoCA/private/cakey.pem:
+
+
+
+openssl req -new -x509 -sha512 -extensions v3_ca -key $dir/private/cakey.pem -out $dir/cacert.pem -days 3650 -set_serial 0
+Enter pass phrase for ./demoCA/private/cakey.pem:
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:US
+State or Province Name (full name) [Some-State]:California
+Locality Name (eg, city) []:Santa Clara
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:BlueChipTek
+Organizational Unit Name (eg, section) []:Cloud Services
+Common Name (e.g. server FQDN or YOUR name) []:bluechiptek.com
+Email Address []:bct-cloudservices@bluechiptek.com
+
+
+$ openssl ca -config demoCA/openssl.cnf -days 1825 -notext -md sha512 -in $dir/SandboxCA.csr -policy policy_anything -extensions v3_ca
+
+
+$ openssl ca -days 1825 -notext -md sha512 -in $dir/SandboxCA.csr -policy policy_anything -extfile demoCA/extension.conf -extensions aws_pca
+Using configuration from /usr/lib/ssl/openssl.cnf
+Enter pass phrase for ./demoCA/private/cakey.pem:
+Check that the request matches the signature
+Signature ok
+Certificate Details:
+        Serial Number: 4096 (0x1000)
+        Validity
+            Not Before: Nov 10 21:57:05 2018 GMT
+            Not After : Nov  9 21:57:05 2023 GMT
+        Subject:
+            countryName               = US
+            stateOrProvinceName       = California
+            localityName              = Santa Clara
+            organizationName          = BlueChipTek
+            organizationalUnitName    = Sandbox
+            commonName                = SandboxCA
+        X509v3 extensions:
+            X509v3 Subject Key Identifier:
+                00:73:57:18:0E:E7:E3:D6:48:AF:15:33:FF:C6:11:98:99:DA:AE:32
+            X509v3 Authority Key Identifier:
+                keyid:BC:00:AE:F6:2A:F4:B9:4D:A1:0C:6E:FD:CF:D1:87:BC:C5:6B:BE:F4
+
+            X509v3 Basic Constraints:
+                CA:TRUE
+Certificate is to be certified until Nov  9 21:57:05 2023 GMT (1825 days)
+Sign the certificate? [y/n]:y
+
+
+1 out of 1 certificate requests certified, commit? [y/n]y
+Write out database with 1 new entries
+
+
+
+
+
+
+
+
+
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 4096 (0x1000)
+    Signature Algorithm: sha512WithRSAEncryption
+        Issuer: C=US, ST=California, L=Santa Clara, O=BlueChipTek, OU=Cloud Services, CN=bluechiptek.com/emailAddress=bct-cloudservices@bluechiptek.com
+        Validity
+            Not Before: Nov 10 21:57:05 2018 GMT
+            Not After : Nov  9 21:57:05 2023 GMT
+        Subject: C=US, ST=California, L=Santa Clara, O=BlueChipTek, OU=Sandbox, CN=SandboxCA
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:b9:de:9b:01:98:bb:59:02:71:57:c4:50:ad:96:
+                    18:37:b6:40:4a:a4:50:d0:f4:c1:75:94:99:c6:ec:
+                    a2:bc:53:07:8a:2c:72:04:c1:ba:fc:83:21:78:02:
+                    e7:63:57:f4:c4:e1:b6:94:da:a1:ba:43:6d:b8:6f:
+                    64:42:3b:17:2d:77:75:23:57:b3:9e:5a:3e:b1:84:
+                    81:82:07:59:dd:d3:65:a8:e3:91:e1:e4:26:ee:ef:
+                    40:c3:3a:6c:08:f2:f8:0f:c9:b8:bb:11:21:b9:ec:
+                    9a:dc:17:a4:71:3a:b1:91:02:34:9e:29:4f:25:91:
+                    b9:a3:cb:97:7c:d0:9f:5d:6f:42:eb:7e:91:4c:dc:
+                    23:f8:e9:7d:6c:a9:89:21:81:8b:98:f3:29:d8:b8:
+                    d8:de:0a:9f:6e:48:28:52:a6:86:a5:c4:a9:33:26:
+                    ff:27:81:fa:50:9c:25:6a:d9:24:66:14:7e:0b:cc:
+                    2b:99:31:ee:98:68:6f:bb:21:4a:e8:a6:1b:96:58:
+                    a3:af:86:c7:b6:aa:96:87:fd:0d:fc:db:0a:e0:17:
+                    82:c3:70:9e:56:cf:33:b1:10:76:0f:b7:5d:4a:f5:
+                    cf:1f:df:1d:39:c3:23:6e:dc:19:72:76:6e:53:1b:
+                    bf:95:c6:02:4b:6a:eb:66:cc:3f:62:4c:54:0c:86:
+                    31:cd
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Key Identifier:
+                00:73:57:18:0E:E7:E3:D6:48:AF:15:33:FF:C6:11:98:99:DA:AE:32
+            X509v3 Authority Key Identifier:
+                keyid:BC:00:AE:F6:2A:F4:B9:4D:A1:0C:6E:FD:CF:D1:87:BC:C5:6B:BE:F4
+
+            X509v3 Basic Constraints:
+                CA:TRUE
+    Signature Algorithm: sha512WithRSAEncryption
+         2a:d6:2d:b4:2b:04:cb:cc:8b:2c:84:9d:17:e4:2f:7c:1d:76:
+         c1:4d:a2:fe:8c:02:5a:e6:01:7c:95:1b:2f:d9:d0:86:5f:9e:
+         ef:36:2e:b2:86:86:75:76:a0:01:64:0a:30:06:03:59:b4:ee:
+         1e:59:ce:8b:ef:7c:35:70:86:69:d5:76:6a:a5:c0:6b:f5:73:
+         d6:ad:1e:a2:45:8e:fa:72:d5:4d:4d:eb:65:dc:1f:f5:89:f6:
+         5f:4f:2f:81:47:1e:26:5b:bc:79:41:33:3e:31:a3:08:e3:df:
+         a8:76:9a:58:38:75:78:36:2e:05:54:c7:bb:15:19:6f:df:11:
+         53:71:a5:67:9d:9e:d8:25:b0:c3:19:77:28:96:42:6b:5f:d6:
+         30:68:51:fc:ed:d1:ba:22:5b:55:91:fa:ed:7c:94:4b:a9:ea:
+         76:3e:a1:48:6c:c4:e0:c3:8f:44:36:ea:08:9b:2c:91:be:66:
+         34:a7:3f:4c:cd:a8:4a:ba:2e:ac:e8:a5:c7:ba:8c:df:7c:86:
+         ea:b7:24:3b:86:77:e9:c1:22:a1:36:40:c3:b6:c3:ad:c6:b5:
+         77:d1:8c:f1:a9:b4:87:50:dd:97:70:f2:c1:91:5b:cd:c0:70:
+         01:52:78:4d:d1:fa:54:71:c5:b1:bd:8e:e5:6e:4e:a0:33:98:
+         2a:f8:6b:fc:d7:b5:4e:6a:30:a2:61:e6:3a:bd:01:e3:f6:7b:
+         65:bd:45:85:c1:44:29:4f:c1:3b:71:77:07:c4:a3:8f:80:ec:
+         c7:ff:c7:89:3d:75:f9:84:39:5a:cb:60:f1:f2:bd:ac:31:8d:
+         33:a5:61:ea:c8:34:fb:66:29:2a:78:69:41:ab:4c:0b:7c:56:
+         24:0d:0d:10:86:fe:36:2c:a9:0b:45:da:03:7e:d8:70:b7:5c:
+         34:f5:54:14:10:36:4c:87:c8:5e:87:af:37:69:9f:10:1d:9e:
+         cb:4b:15:2c:c5:41:47:25:b6:14:bc:bc:0c:1f:42:6f:52:bd:
+         fc:fe:6e:1c:70:31:69:af:45:de:2a:c4:5e:d8:3e:d7:45:81:
+         b2:97:b0:a9:e2:26:a3:61:b7:4f:b4:73:20:3f:3e:36:f4:33:
+         94:37:1e:33:ce:b4:81:09:66:93:26:5d:e6:7b:0f:f9:2c:6d:
+         01:a9:3a:31:a9:46:c0:19:a2:a3:97:db:94:e0:5d:41:a4:3a:
+         98:54:03:37:cc:51:82:a0:4e:6b:ae:4e:3d:c7:a3:03:24:d1:
+         da:f6:e2:5a:44:f9:8b:1a:ce:ca:db:e0:d2:89:d2:96:bb:33:
+         a7:e8:d5:ae:54:11:2c:35:ae:dd:02:0a:4d:f5:6e:2b:5e:0a:
+         b1:71:9c:0b:a0:04:2a:1e
+
