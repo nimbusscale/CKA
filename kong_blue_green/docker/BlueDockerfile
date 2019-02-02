@@ -1,0 +1,3 @@
+FROM bitnami/apache:latest
+
+COPY blue_index.html /app/index.html

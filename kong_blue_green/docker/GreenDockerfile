@@ -1,0 +1,3 @@
+FROM bitnami/apache:latest
+
+COPY green_index.html /app/index.html

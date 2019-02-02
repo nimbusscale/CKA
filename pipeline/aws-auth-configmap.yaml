@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+   name: aws-auth
+   namespace: kube-system
+data:
+   mapRoles: |
+    - rolearn: arn:aws:iam::899826514230:role/eksctl-attractive-sheepdog-154379-NodeInstanceRole-6XWEUDL0KIQU
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+         - system:bootstrappers
+         - system:nodes
+    - rolearn: arn:aws:iam::899826514230:role/service-role/codebuild-GithubTest-service-role
+      username: pipeline
+      groups:
+         - system:masters
